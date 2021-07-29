@@ -1,5 +1,5 @@
 const express = require("express");
-const { NotFoundError } = require("../expressError");
+const { NotFoundError, BadRequestError } = require("../expressError");
 
 const db = require("../db");
 
@@ -24,5 +24,55 @@ router.get("/:code", async function (req, res, next) {
   }
   return res.json({ company: result.rows[0] });
 });
+
+router.post("/", async function (req, res, next) {
+    
+    const { code, name , description} = req.body;
+
+    if( !code || !name || !description){
+        throw new BadRequestError()
+    }
+    let result = await db.query(
+      `INSERT INTO companies( code, name, description)
+      VALUES ($1, $2, $3)
+      RETURNING (code,name, description)`,
+      [code , name ,description]
+    );
+    return res.json({ company: { code, name , description}});
+  });
+
+router.put("/:code", async function (req, res, next) {
+    
+    const { code, name , description} = req.body;
+
+    if( !code || !name || !description){
+        throw new BadRequestError()
+    }
+
+    let result = await db.query(
+      `UPDATE companies 
+
+        SET code = $1, 
+            name = $2,
+            description = $3
+
+            WHERE code = $4
+            RETURNING (code,name, description)`,
+      [code , name ,description, req.params.code]
+    );
+    return res.json({ company: { code, name , description}});
+  });
+
+router.delete("/:code", async function(req,res,next){
+    await db.query(
+
+        `DELETE FROM companies 
+        WHERE code = $1 
+        RETURNING (code) `,
+        [req.params.code]
+    )
+    return res.json({ message: "Deleted" });
+})
+
 
 module.exports = router;
