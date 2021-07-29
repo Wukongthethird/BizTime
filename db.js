@@ -1,15 +1,16 @@
 /** Database setup for BizTime. */
 
-const { Client} = require("pg")
+const { Client } = require("pg");
 
-const DB_URI = process.env.Node_env ==="test"
+const DB_URI =
+  process.env.Node_env === "test"
     ? "postgresql:///biztime_test"
-    :"postgresql:///biztime";
+    : "postgresql:///biztime";
 
 let db = new Client({
-    connectionString: DB_URI
+  connectionString: DB_URI,
 });
 
-db.connect()
+db.connect();
 
-module.exports = db
+module.exports = db;

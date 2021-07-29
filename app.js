@@ -7,10 +7,11 @@ const app = express();
 
 app.use(express.json());
 
-const companiesRoute = require("./companies");
+const companiesRoute = require("./routes/companies");
+// const invoicesRoute = require("./routes/invoices");
 //add error handler
 app.use("/companies", companiesRoute);
-
+// app.use("/invoices", invoicesRoute);
 
 /** 404 handler: matches unmatched routes; raises NotFoundError. */
 app.use(function (req, res, next) {
@@ -24,7 +25,5 @@ app.use(function (err, req, res, next) {
   if (process.env.NODE_ENV !== "test") console.error(status, err.stack);
   return res.status(status).json({ error: { message, status } });
 });
-
-
 
 module.exports = app;
