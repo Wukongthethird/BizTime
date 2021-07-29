@@ -19,10 +19,10 @@ router.get("/:code", async function (req, res, next) {
     WHERE code = $1`,
     [req.params.code]
   );
-  if (result.rowCount !== 0) {
-    return res.json({ company: result.rows[0] });
+  if (result.rowCount === 0) {
+    throw new NotFoundError();
   }
-  throw new NotFoundError();
+  return res.json({ company: result.rows[0] });
 });
 
 module.exports = router;
