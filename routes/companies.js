@@ -16,7 +16,8 @@ router.get("/", async function (req, res, next) {
   return res.json({ companies: result.rows });
 });
 
-/* Return obj of company: {company: {code, name, description}} */
+/* Return obj of company: {company: {code, name, description,
+    invoices[id,......]}} */
 router.get("/:code", async function (req, res, next) {
   let result = await db.query(
     `SELECT code, name, description
@@ -25,11 +26,23 @@ router.get("/:code", async function (req, res, next) {
     [req.params.code]
   );
   // if user tries to get a company that doesn't exist, NotFoundError thrown
-  if (!result.rows[0]) {
+  let company = result.rows[0];
+  if (!company) {
     //let them know if the company doesnt exist
     throw new NotFoundError(`Company not found: ${code}`);
   }
-  return res.json({ company: result.rows[0] });
+
+  let invoices = await db.query(
+    `SELECT id 
+    FROM invoices 
+    JOIN companies on
+    invoices.comp_code = companies.code
+    WHERE companies.code = $1
+    `, [req.params.code]
+  );
+  company.invoices = invoices.rows.map(invoice => invoice.id)
+  
+  return res.json({ company});
 });
 
 /* Returns obj of new company: {company: {code, name, description}} */

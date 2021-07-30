@@ -11,8 +11,7 @@ const router = new express.Router();
 router.get("/", async function (req, res, next) {
   let result = await db.query(
     `SELECT id, comp_code
-        FROM invoices
-        `
+    FROM invoices`
   );
   let invoices = result.rows;
   return res.json({ invoices });
@@ -43,9 +42,12 @@ router.get("/:id", async function (req, res, next) {
   );
 
   invoice.company = company.rows[0];
-  return res.json({ invoices: invoice });
+  return res.json({ invoices });
 });
 
+/**Adds an invoice from jSON {comp_code, amt}
+*Returns: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
+*/
 router.post("/", async function (req, res, next) {
   let { comp_code, amt } = req.body;
 
@@ -63,8 +65,16 @@ router.post("/", async function (req, res, next) {
   );
 
   let invoice = result.rows[0];
+  if (!invoice) {
+    throw new NotFoundError(`Invoice ${req.params.id} not found`);
+  }
   return res.json({ invoice });
 });
+
+/**
+ * Updates an invoice via {amt}.If invoice cannot be found, returns a 404.
+ * Returns: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
+ */
 
 router.put("/:id", async function (req, res, next) {
   let { amt } = req.body;
@@ -75,9 +85,28 @@ router.put("/:id", async function (req, res, next) {
          RETURNING id, comp_code, amt, paid, add_date, paid_date`,
     [amt, req.params.id]
   );
-  console.log(result);
+
   let invoice = result.rows[0];
+  if (!invoice) {
+    throw new NotFoundError(`Invoice ${req.params.id} not found`);
+  }
   return res.json({ invoice });
 });
+
+//deletes an existing invoice responds with { status: "Deleted" }
+router.delete("/:id" , async function(req, res, next){
+    let result = await db.query(
+        `DELETE FROM invoices 
+            WHERE id = $1 
+            RETURNING id`,
+        [req.params.id]
+      );
+      /* if a user tries to update a invoice code that does not exist,
+        NotFoundError thrown */
+      if (!result.rows[0]) {
+        throw new NotFoundError( `The ${id} entered does not exist!` );
+      }
+      return res.json({ status: "Deleted" });
+})
 
 module.exports = router;
